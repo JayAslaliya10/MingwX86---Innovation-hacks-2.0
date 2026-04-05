@@ -25,12 +25,12 @@ def _chunk_text(text: str) -> list[str]:
 
 
 async def _get_embedding(text: str) -> list[float] | None:
-    """Get embedding vector from Gemini text-embedding-004."""
+    """Get embedding vector from Gemini embedding-001."""
     try:
         import google.generativeai as genai
         genai.configure(api_key=settings.gemini_api_key)
         result = genai.embed_content(
-            model="models/text-embedding-004",
+            model="models/embedding-001",
             content=text,
             task_type="retrieval_document",
         )

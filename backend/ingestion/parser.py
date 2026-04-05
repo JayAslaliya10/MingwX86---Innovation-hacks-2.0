@@ -87,14 +87,26 @@ async def _parse_with_pdfminer(pdf_path: str) -> ParsedDocument:
 
 
 async def parse_pdf_from_url(url: str) -> ParsedDocument:
-    """Download a PDF from a URL and parse it."""
+    """Download a PDF or HTML policy page from a URL and parse it."""
     import httpx
     import tempfile
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(
+        timeout=60,
+        follow_redirects=True,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; MedPolicyBot/1.0)"},
+    ) as client:
         resp = await client.get(url)
         resp.raise_for_status()
 
+    content_type = resp.headers.get("content-type", "")
+
+    # Handle HTML pages (e.g. Aetna Clinical Policy Bulletins)
+    if "text/html" in content_type:
+        result = await _parse_html_content(resp.text, url)
+        return result
+
+    # Default: treat as PDF
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(resp.content)
         tmp_path = tmp.name
@@ -105,3 +117,34 @@ async def parse_pdf_from_url(url: str) -> ParsedDocument:
         return result
     finally:
         os.unlink(tmp_path)
+
+
+async def _parse_html_content(html: str, url: str) -> ParsedDocument:
+    """Extract readable text from an HTML policy page using BeautifulSoup."""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Remove navigation, header, footer noise
+        for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+            tag.decompose()
+
+        # Try to get main content area first
+        main = soup.find("main") or soup.find("article") or soup.find(id="content") or soup.body
+        text = main.get_text(separator="\n") if main else soup.get_text(separator="\n")
+
+        # Clean up whitespace
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        full_text = "\n".join(lines)
+
+        return ParsedDocument(
+            text=full_text,
+            pages=[full_text],
+            metadata={"source": url, "parser": "beautifulsoup", "content_type": "html"},
+        )
+    except Exception as e:
+        return ParsedDocument(
+            text="",
+            pages=[],
+            metadata={"source": url, "parser": "html_failed", "error": str(e)},
+        )
