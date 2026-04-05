@@ -10,12 +10,16 @@ export default function ProtectedRoute({ children, requiresNoHealthCard = false 
   const [fetching, setFetching] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (isLoading) return          // still waiting for Auth0
+    if (!isAuthenticated) {
+      setFetching(false)           // not logged in — stop spinner, redirect to login
+      return
+    }
     getMe()
       .then((res) => setUser(res.data))
       .catch(() => setUser(null))
       .finally(() => setFetching(false))
-  }, [isAuthenticated])
+  }, [isAuthenticated, isLoading])
 
   if (isLoading || fetching) return <Loading />
   if (!isAuthenticated) return <Navigate to="/login" replace />
