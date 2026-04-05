@@ -29,7 +29,9 @@ requests==2.32.3
 
 # ─── Utilities ────────────────────────────────────────────
 pydantic==2.9.2
+pydantic[email]==2.9.2
 pydantic-settings==2.5.2
+email-validator==2.2.0
 python-dotenv==1.0.1
 difflib2==1.0.0
 hashlib2==1.0.0
