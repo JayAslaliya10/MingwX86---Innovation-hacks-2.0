@@ -1,0 +1,42 @@
+# ─── Python ───────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+venv/
+env/
+.venv/
+.env
+*.env
+
+# ─── Node / Frontend ──────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+*.log
+npm-debug.log*
+
+# ─── IDE ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Docker ───────────────────────────────────────────────
+pgdata/
+
+# ─── Misc ─────────────────────────────────────────────────
+*.zip
+*.pyc
+.coverage
+htmlcov/
+.pytest_cache/
